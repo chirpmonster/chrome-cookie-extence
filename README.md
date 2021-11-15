@@ -1,2 +1,2 @@
-# chirpmonster-chrome-cookie-extence
+# chrome-cookie-extence
 Solve the problem that Cookies cannot be carried in Chrome 90+
