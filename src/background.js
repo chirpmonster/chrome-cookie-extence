@@ -9,7 +9,7 @@ const state = {
 init()
 
 function init() {
-    console.log('chrome-cookie-issue is powered by jiguang')
+    console.log('chrome-cookie-issue is powered by chirpmonster')
     //获取第一次cookie
     updateCookie()
     //添加开关监听器
