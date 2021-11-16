@@ -7,8 +7,7 @@
 
 ## 使用指南
 
-下载插件，点击Chrome浏览器右上角… =>更多工具=>拓展程序
-
+下载 [插件](https://github.com/chirpmonster/chrome-cookie-extence/raw/master/cookie%E9%97%AE%E9%A2%98%E6%8F%92%E4%BB%B6.zip) ，点击Chrome浏览器右上角… =>更多工具=>拓展程序
 打开开发者模式，拖入zip文件，立即生效
 
 右上角插件按钮可以将插件固定在顶端
