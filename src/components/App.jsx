@@ -9,7 +9,7 @@ export default class App extends Component{
         return (
             <div className='chrome-box'>
                 <CookieCarrier key={'CookieCarrier'}/>
-                <div className='technical-support'>Powered by <a>@极光</a></div>
+                <div className='technical-support'>Powered by <a href='https://github.com/chirpmonster' target='_blank'>@chirpmonster</a></div>
             </div>
         )
     }
