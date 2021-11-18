@@ -34,6 +34,8 @@ npm run build
 
 0.1.2 修复了initiator和url不一致时的解析逻辑
 
+0.1.3 【不携带cookie的白名单】验证时机提前
+
 ---
 
 This project is powered by chirpmonster
