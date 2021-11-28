@@ -41,6 +41,7 @@ export default class CookieCarrier extends Component {
                                     onChange={() => {
                                         this.getCookieStatus(!cookieStatus)
                                     }}/>
+                            <span className='CookieCarrier-ex-text'>建议仅开发时打开</span>
                         </div> : 'loading'
                 }
             </div>

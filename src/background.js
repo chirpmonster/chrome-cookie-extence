@@ -1,9 +1,10 @@
 'use strict';
 
 const state = {
-    cookieStatus: true, //开启状态
+    cookieStatus: true,
     cookieStr: '', //用于校验相同cookie
     cookieMap: null, //存储cookie的domain映射
+    autoCompleteStatus:true,
 }
 
 init()
@@ -48,15 +49,27 @@ function storeCookie(cookie) {
 function addMessageListener() {
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         if (request.type === 'cookieStatus') {
-            if(request.cookieStatus!==null){
+            if(request.cookieStatus===true||request.cookieStatus===false){
                 state.cookieStatus = request.cookieStatus
                 updateCookie()
             }
+            sendResponse({
+                success:true,
+                cookieStatus:state.cookieStatus
+            })
         }
-        sendResponse({
-            success:true,
-            cookieStatus:state.cookieStatus
-        })
+        if (request.type === 'autoCompleteStatus') {
+            if(request.autoCompleteStatus===true||request.autoCompleteStatus===false){
+                state.autoCompleteStatus = request.autoCompleteStatus
+            }
+            // if(request.autoCompleteStatus===false){
+            //     stopAutoCompleteTimer()
+            // }
+            sendResponse({
+                success:true,
+                autoCompleteStatus:state.autoCompleteStatus
+            })
+        }
     });
 }
 
@@ -86,7 +99,7 @@ function setCookie(details) {
         return
     }
     //网盘和谷歌商城存在验证问题
-    let forbiddenList=['baidu','google','gitlab']
+    let forbiddenList=['baidu','google','gitlab','mfp','mail.qq']
     for(let i=0;i<forbiddenList.length;i++){
         if(details.url?.includes(forbiddenList[i])){
             return
@@ -104,3 +117,12 @@ function setCookie(details) {
     console.log('成功携带cookie:' + details.url)
     return {requestHeaders: details.requestHeaders}
 }
+
+// function stopAutoCompleteTimer(){
+//     console.log(12223)
+//     chrome.runtime.sendMessage(
+//         {
+//             type: 'stopAutoComplete',
+//         }
+//     );
+// }

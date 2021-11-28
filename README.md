@@ -37,6 +37,8 @@ npm run build
 
 0.1.3 【不携带cookie的白名单】验证时机提前
 
+0.1.4 添加不携带cookie的白名单，添加建议关闭的文案
+
 ---
 
 This project is powered by chirpmonster
