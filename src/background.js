@@ -99,7 +99,7 @@ function setCookie(details) {
         return
     }
     //网盘和谷歌商城存在验证问题
-    let forbiddenList=['baidu','google','gitlab','mfp','mail.qq']
+    let forbiddenList=['baidu','google','gitlab','mfp','mail.qq','csdn']
     for(let i=0;i<forbiddenList.length;i++){
         if(details.url?.includes(forbiddenList[i])){
             return
