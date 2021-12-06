@@ -88,18 +88,20 @@ function setCookie(details) {
     updateCookie()
     //如果已经有cookie，return
     for (let i = details.requestHeaders.length - 1; i >= 0; i--) {
-        if (details.requestHeaders[i] === 'Cookie') {
+        if (details.requestHeaders[i].name === 'Cookie') {
+            console.log('无需添加cookie:' + details.url)
             return
         }
     }
     const url_to_domain_reg=/:\/\/.*?\//i
     const domain_to_subdomain_reg=/\.([a-z0-9-])+\.[a-z]+(:[0-9]*)?/g
     if (!details.url) {
-        console.log(details+'本次未成功携带Cookie，请确认该请求是否需要携带Cookie')
+        console.log(details+'本次未成功携带Cookie，请确认该请求是否需要携带Cookie'+details.url)
+        console.log('若需要，请联系@chirpmonster')
         return
     }
     //网盘和谷歌商城存在验证问题
-    let forbiddenList=['baidu','google','gitlab','mfp','mail.qq','csdn']
+    let forbiddenList=['baidu','google','gitlab','mfp','mail.qq','csdn','cnblogs']
     for(let i=0;i<forbiddenList.length;i++){
         if(details.url?.includes(forbiddenList[i])){
             return
