@@ -110,7 +110,7 @@ function setCookie(details) {
                 newCookie = state.cookieMap.get('/')
             }
             details.requestHeaders.push({name: 'Cookie', value: newCookie})
-            console.log('强制携带cookie成功:' + details.url + 'cookie为' + newCookie || '获取失败')
+            console.log('强制携带cookie成功:' + details.url + ' cookie为' + newCookie)
             return {requestHeaders: details.requestHeaders}
         }
     }
@@ -151,7 +151,7 @@ function setCookie(details) {
         newCookie = state.cookieMap.get('/')
     }
     details.requestHeaders.push({name: 'Cookie', value: newCookie})
-    console.log('成功携带cookie:' + details.url + 'cookie为' + newCookie || '获取失败')
+    console.log('成功携带cookie:' + details.url + ' cookie为' + newCookie)
     return {requestHeaders: details.requestHeaders}
 }
 
