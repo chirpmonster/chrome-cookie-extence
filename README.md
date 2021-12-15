@@ -7,7 +7,7 @@
 
 ## 使用指南
 
-下载 [插件](https://github.com/chirpmonster/chrome-cookie-extence/raw/master/chrome%20cookie%20v0.2.0.zip) ，点击Chrome浏览器右上角… =>更多工具=>拓展程序
+下载 [插件](https://github.com/chirpmonster/chrome-cookie-extence/raw/master/cookie%E6%8F%92%E4%BB%B6v0.2.1.zip) ，点击Chrome浏览器右上角… =>更多工具=>拓展程序
 
 打开开发者模式，拖入zip文件，立即生效
 
