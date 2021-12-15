@@ -41,6 +41,8 @@ npm run build
 
 0.2.0 添加强制替换cookie的配置
 
+0.2.1 支持对ip地址型domain的支持
+
 ---
 
 This project is powered by chirpmonster

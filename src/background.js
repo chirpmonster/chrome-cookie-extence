@@ -21,7 +21,7 @@ function init() {
     chrome.storage.local.set({superCookieList: ''});
     chrome.storage.local.get(['superCookieList'], (result) => {
         if (!result.superCookieList) {
-            let defaultList=['localhost', '.baidu.com', 'www.baidu.com']
+            let defaultList = ['localhost', '.baidu.com', 'www.baidu.com']
             chrome.storage.local.set({superCookieList: defaultList});
             state.superCookieList = defaultList
         } else {
@@ -60,12 +60,11 @@ function storeCookie(cookie) {
 function addMessageListener() {
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         if (request.type === 'cookieStatus') {
-            console.log(request)
             if (request.cookieStatus === true || request.cookieStatus === false) {
                 state.cookieStatus = request.cookieStatus
                 updateCookie()
             }
-            if(request.superCookieList){
+            if (request.superCookieList) {
                 state.superCookieList = request.superCookieList
                 chrome.storage.local.set({superCookieList: request.superCookieList});
             }
@@ -98,17 +97,26 @@ function addRequestListener() {
 }
 
 function setCookie(details) {
-    console.log(state.superCookieList)
     if (!state.cookieStatus) {
         return
     }
     updateCookie()
+    //网盘和谷歌商城存在验证问题
+    let forbiddenList = ['baidu', 'google', 'gitlab', 'mfp', 'mail.qq', 'csdn', 'cnblogs']
     for (let i = 0; i < state.superCookieList.length; i++) {
         if (details.url?.includes(state.superCookieList[i])) {
-            const newCookie = state.cookieMap.get(state.superCookieList[i])
+            let newCookie = state.cookieMap.get(state.superCookieList[i])
+            if (!newCookie) {
+                newCookie = state.cookieMap.get('/')
+            }
             details.requestHeaders.push({name: 'Cookie', value: newCookie})
-            console.log('强制携带cookie成功:' + details.url)
+            console.log('强制携带cookie成功:' + details.url + 'cookie为' + newCookie || '获取失败')
             return {requestHeaders: details.requestHeaders}
+        }
+    }
+    for (let i = 0; i < forbiddenList.length; i++) {
+        if (details.url?.includes(forbiddenList[i])) {
+            return
         }
     }
     //如果已经有cookie，return
@@ -125,23 +133,25 @@ function setCookie(details) {
         console.log('若需要，请联系@chirpmonster')
         return
     }
-    //网盘和谷歌商城存在验证问题
-    let forbiddenList = ['baidu', 'google', 'gitlab', 'mfp', 'mail.qq', 'csdn', 'cnblogs']
-    for (let i = 0; i < forbiddenList.length; i++) {
-        if (details.url?.includes(forbiddenList[i])) {
-            return
+    let domain = details.url.match(url_to_domain_reg)?.[0] ?? details.url //正则获取domain或者保底
+    if (domain.match(domain_to_subdomain_reg)) {
+        domain = domain.match(domain_to_subdomain_reg)
+        domain = domain?.[0]?.split(':')?.[0]
+    } else {
+        if (domain.slice(0, 3) === '://') {
+            domain = domain.substring(3)
+        }
+        if (domain[domain.length - 1] === '/') {
+            domain = domain.split(':')?.[0]?.split('/')?.[0]
         }
     }
-    let domain = details.url.match(url_to_domain_reg)?.[0] ?? details.url //正则获取domain或者保底
-    domain = domain.match(domain_to_subdomain_reg)
-    domain = domain?.[0]?.split(':')?.[0]
-    const newCookie = state.cookieMap.get(domain)
-    //如果cookie不存在，return
+    let newCookie = state.cookieMap.get(domain)
+    //如果cookie不存在
     if (!newCookie) {
-        return
+        newCookie = state.cookieMap.get('/')
     }
     details.requestHeaders.push({name: 'Cookie', value: newCookie})
-    console.log('成功携带cookie:' + details.url)
+    console.log('成功携带cookie:' + details.url + 'cookie为' + newCookie || '获取失败')
     return {requestHeaders: details.requestHeaders}
 }
 

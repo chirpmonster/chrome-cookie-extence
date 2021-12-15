@@ -53,7 +53,7 @@ export default class CookieCarrier extends Component {
                                 <span className='CookieCarrier-ex-text'>建议仅开发时打开</span>
                             </div>
                             <div style={{marginTop:'20px'}}>
-                                <div>如果打开开关仍不行，将域名添加至列表</div>
+                                <div>如果打开开关仍不行，再将Domain添加至列表</div>
                                 {
                                     superCookieList.map((item, index) => {
                                         return <div>
@@ -81,6 +81,8 @@ export default class CookieCarrier extends Component {
                                                    })
                                                }}
                                 />
+                                <div style={{color:'darkgrey'}}>在哪里查看Domain？</div>
+                                <div style={{color:'darkgrey'}}>F12-Application-Cookie-Domain</div>
                             </div>
                         </div> : 'loading'
                 }
