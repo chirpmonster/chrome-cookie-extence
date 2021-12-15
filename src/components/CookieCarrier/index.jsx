@@ -1,5 +1,7 @@
 import React, {Component} from 'react';
-import {Switch} from 'antd'
+import {Input, Switch} from 'antd'
+
+import {CheckOutlined} from '@ant-design/icons';
 
 import './index.less'
 
@@ -7,18 +9,24 @@ export default class CookieCarrier extends Component {
 
     state = {
         cookieStatus: null,
-        getStatus: false
+        getStatus: false,
+        superCookieList: []
     }
 
     componentDidMount() {
-        this.getCookieStatus()
+        this.setCookieStatus()
+        chrome.storage.local.get(['superCookieList'], (result) => {
+            console.log(result)
+            this.setState({superCookieList:result.superCookieList||[]})
+        })
     }
 
-    getCookieStatus = (cookieStatus = null) => {
+    setCookieStatus = (cookieStatus = null,superCookieList=null) => {
         chrome.runtime.sendMessage(
             {
                 type: 'cookieStatus',
-                cookieStatus
+                cookieStatus,
+                superCookieList
             },
             (res) => {
                 if (res.success) {
@@ -29,19 +37,51 @@ export default class CookieCarrier extends Component {
     }
 
     render() {
-        let {cookieStatus, getStatus} = this.state;
+        let {cookieStatus, getStatus, superCookieList, tempCookie} = this.state;
         return [
             <div>
                 {
                     getStatus ?
                         <div className='CookieCarrier'>
-                            强制携带cookie：
-                            <Switch defaultChecked
-                                    checked={this.state.cookieStatus}
-                                    onChange={() => {
-                                        this.getCookieStatus(!cookieStatus)
-                                    }}/>
-                            <span className='CookieCarrier-ex-text'>建议仅开发时打开</span>
+                            <div>
+                                强制携带cookie：
+                                <Switch defaultChecked
+                                        checked={this.state.cookieStatus}
+                                        onChange={() => {
+                                            this.setCookieStatus(!cookieStatus)
+                                        }}/>
+                                <span className='CookieCarrier-ex-text'>建议仅开发时打开</span>
+                            </div>
+                            <div style={{marginTop:'20px'}}>
+                                <div>如果打开开关仍不行，将域名添加至列表</div>
+                                {
+                                    superCookieList.map((item, index) => {
+                                        return <div>
+                                            <span>{item}</span>
+                                            <span className='CookieCarrier-delete'
+                                                           onClick={() => {
+                                                               superCookieList.splice(index, 1)
+                                                               this.setState({superCookieList}, () => {
+                                                                   this.setCookieStatus(null,superCookieList)
+                                                               })
+                                                           }}>删除</span>
+                                        </div>
+                                    })
+                                }
+                                <Input value={tempCookie}
+                                       style={{width: '200px'}}
+                                       onChange={(e) => {
+                                           this.setState({tempCookie: e.target.value})
+                                       }}/>
+                                <CheckOutlined className='CookieCarrier-confirm'
+                                               onClick={() => {
+                                                   superCookieList.push(tempCookie)
+                                                   this.setState({superCookieList, tempCookie: ''},()=>{
+                                                       this.setCookieStatus(true,superCookieList)
+                                                   })
+                                               }}
+                                />
+                            </div>
                         </div> : 'loading'
                 }
             </div>

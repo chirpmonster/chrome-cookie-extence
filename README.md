@@ -39,6 +39,8 @@ npm run build
 
 0.1.4 添加不携带cookie的白名单，添加建议关闭的文案
 
+0.2.0 添加强制替换cookie的配置
+
 ---
 
 This project is powered by chirpmonster
