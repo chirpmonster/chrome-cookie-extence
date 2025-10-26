@@ -1,105 +1,156 @@
 'use strict';
 
+import { updateCookie } from './utils/cookie.js';
+import { initForbiddenDomains, getDomainList, addDomain, removeDomain } from './utils/domain.js';
+import { updateRules, removeAllRules } from './utils/rules.js';
+import { getStorage, setStorage, getManifestDefaults } from './utils/storage.js';
+
+// 应用状态
 const state = {
-    cookieStatus: true, //开启状态
-    cookieStr: '', //用于校验相同cookie
-    cookieMap: null, //存储cookie的domain映射
-}
+    cookieStatus: true,
+    autoCompleteStatus: true
+};
 
-init()
+init();
 
-function init() {
-    console.log('chrome-cookie-issue is powered by jiguang')
-    //获取第一次cookie
-    updateCookie()
-    //添加开关监听器
-    addMessageListener()
-    //添加请求监听器
-    addRequestListener()
-}
+async function init() {
+    console.log('chrome-cookie-issue is powered by ronhliu (V3 version)');
 
-function updateCookie() {
-    chrome.cookies.getAll(
-        {},
-        (cookie) => {
-            storeCookie(cookie)
-        },
-    )
-}
+    // 从manifest.json获取默认配置
+    const { defaultDomains, defaultForbiddenDomains } = getManifestDefaults();
 
-function storeCookie(cookie) {
-    //cookie更新校验
-    if (state.cookieStr === JSON.stringify(cookie)) {
-        console.log('cookie缓存未更新')
-        return
+    // 初始化禁止域名列表
+    initForbiddenDomains(defaultForbiddenDomains);
+
+    // 初始化状态和域名列表
+    await initState(defaultDomains);
+
+    // 获取第一次cookie
+    await updateCookie();
+
+    // 添加开关监听器
+    addMessageListener();
+
+    // 初始化规则（如果cookie开关已打开）
+    if (state.cookieStatus) {
+        const domainList = await getDomainList();
+        await updateRules(state.cookieStatus, domainList);
     }
-    state.cookieStr = JSON.stringify(cookie)
-    const newCookieMap = new Map()
-    //解析domain
-    cookie.forEach((item) => {
-        const str = (newCookieMap.get(item.domain) || '') + item.name + '=' + item.value + '; '
-        newCookieMap.set(item.domain, str)
-    })
-    state.cookieMap = newCookieMap
-    console.log('cookie缓存已更新')
-    console.log(cookie)
+}
+
+// 初始化状态和域名列表
+async function initState(defaultDomains) {
+    try {
+        const result = await getStorage(['domain_list', 'cookieStatus']);
+
+        // 初始化domain_list
+        if (!result.domain_list) {
+            await setStorage({ domain_list: defaultDomains });
+        }
+
+        // 初始化cookieStatus
+        if (result.cookieStatus !== undefined) {
+            state.cookieStatus = result.cookieStatus;
+        }
+
+        console.log('初始化状态和域名列表成功');
+    } catch (error) {
+        console.error('初始化状态和域名列表失败:', error);
+    }
 }
 
 function addMessageListener() {
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         if (request.type === 'cookieStatus') {
-            if(request.cookieStatus!==null){
-                state.cookieStatus = request.cookieStatus
-                updateCookie()
+            if (request.cookieStatus === true || request.cookieStatus === false) {
+                state.cookieStatus = request.cookieStatus;
+                // 保存状态到storage
+                setStorage({ cookieStatus: state.cookieStatus });
+
+                updateCookie().then(async () => {
+                    const domainList = await getDomainList();
+                    if (state.cookieStatus) {
+                        updateRules(state.cookieStatus, domainList);
+                    } else {
+                        removeAllRules();
+                    }
+                });
+            }
+
+            sendResponse({
+                success: true,
+                cookieStatus: state.cookieStatus
+            });
+        }
+
+        if (request.type === 'autoCompleteStatus') {
+            if (request.autoCompleteStatus === true || request.autoCompleteStatus === false) {
+                state.autoCompleteStatus = request.autoCompleteStatus;
+            }
+
+            sendResponse({
+                success: true,
+                autoCompleteStatus: state.autoCompleteStatus
+            });
+        }
+
+        if (request.type === 'addDomain') {
+            if (request.domain) {
+                getDomainList().then(domainList => {
+                    addDomain(request.domain, domainList).then(async success => {
+                        if (success && state.cookieStatus) {
+                            const updatedDomainList = await getDomainList();
+                            updateRules(state.cookieStatus, updatedDomainList);
+                        }
+                        sendResponse({
+                            success: true,
+                            domain_list: await getDomainList()
+                        });
+                    });
+                });
+                return true; // 保持消息通道开放以支持异步响应
             }
         }
-        sendResponse({
-            success:true,
-            cookieStatus:state.cookieStatus
-        })
+
+        if (request.type === 'removeDomain') {
+            if (request.domain) {
+                getDomainList().then(domainList => {
+                    removeDomain(request.domain, domainList).then(async success => {
+                        if (success && state.cookieStatus) {
+                            const updatedDomainList = await getDomainList();
+                            updateRules(state.cookieStatus, updatedDomainList);
+                        }
+                        sendResponse({
+                            success: true,
+                            domain_list: await getDomainList()
+                        });
+                    });
+                });
+                return true; // 保持消息通道开放以支持异步响应
+            }
+        }
+
+        if (request.type === 'getDomainList') {
+            getDomainList().then(domainList => {
+                sendResponse({
+                    success: true,
+                    domain_list: domainList
+                });
+            });
+            return true; // 保持消息通道开放以支持异步响应
+        }
+
+        return true; // 保持消息通道开放以支持异步响应
     });
 }
 
-function addRequestListener() {
-    chrome.webRequest.onBeforeSendHeaders.addListener(
-        setCookie,
-        {urls: ["<all_urls>"]},
-        ["blocking", "requestHeaders", "extraHeaders"]
-    );
-}
-
-function setCookie(details) {
-    if (!state.cookieStatus) {
-        return
-    }
-    updateCookie()
-    //如果已经有cookie，return
-    for (let i = details.requestHeaders.length - 1; i >= 0; i--) {
-        if (details.requestHeaders[i] === 'Cookie') {
-            return
-        }
-    }
-    const reg = /\.([a-z0-9-])+\.[a-z]+(:[0-9]*)?/g
-    console.log('成功携带cookie:' + details.url)
-    if (!details.url) {
-        console.log(details+'本次未成功携带Cookie，请确认该请求是否需要携带Cookie')
-        return
-    }
-    let domain=details.url.match(/:\/\/.*?\//i)?.[0]??details.url //正则获取domain或者保底
-    domain = domain.match(reg)
-    domain = domain?.[0]?.split(':')?.[0]
-    //网盘和谷歌商城存在验证问题
-    let forbiddenList=['baidu','google','gitlab']
-    for(let i=0;i<forbiddenList.length;i++){
-        if(domain?.includes(forbiddenList[i])){
-            return
-        }
-    }
-    const newCookie = state.cookieMap.get(domain)
-    //如果cookie不存在，return
-    if (!newCookie) {
-        return
-    }
-    details.requestHeaders.push({name: 'Cookie', value: newCookie})
-    return {requestHeaders: details.requestHeaders}
-}
+// 定期更新规则（每5分钟）
+// setInterval(async () => {
+//     if (state.cookieStatus) {
+//         const updated = await updateCookie();
+//         if (updated) {
+//             const domainList = await getDomainList();
+//             await updateRules(state.cookieStatus, domainList);
+//         }
+//     }
+// }, 5 * 60 * 1000);
